@@ -29,17 +29,20 @@ public class ApiController {
     private final String listBrothsUrl = "https://api.tech.redventures.com.br/broths";
     private final String listProteinsUrl = "https://api.tech.redventures.com.br/proteins";
 
-    
-
-
     @PostMapping("/orders")
     @ResponseBody
-    public String sendRequestWithApiKey(@RequestBody String requestBody) {
+    public ResponseEntity<?> sendRequestWithApiKey(@RequestBody String requestBody) {
         try {
+            // order logic
+
+
             return apiService.postWithApiKey(key, generateidUrl, requestBody);
+
+
         } catch (Exception e) {
             
-            return "Error: " + e.getMessage();
+            answerModel.setMessage(e.getMessage());
+            return new ResponseEntity<AnswerModel>(answerModel, HttpStatus.BAD_REQUEST);
         }
     }
 

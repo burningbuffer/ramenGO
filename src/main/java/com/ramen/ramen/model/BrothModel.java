@@ -7,12 +7,12 @@ import lombok.Setter;
 @Setter
 public class BrothModel {
     
-    private Long id;
+    private String id;
     private String imageInactive;
     private String imageActive;
     private String name;
     private String description;
-    private float price;
+    private String price;
 
 
 
