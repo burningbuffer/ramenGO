@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ramen.ramen.model.AnswerModel;
 import com.ramen.ramen.service.ApiService;
 
@@ -29,41 +31,76 @@ public class ApiController {
     private final String listBrothsUrl = "https://api.tech.redventures.com.br/broths";
     private final String listProteinsUrl = "https://api.tech.redventures.com.br/proteins";
 
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
     @PostMapping("/orders")
     @ResponseBody
     public ResponseEntity<?> sendRequestWithApiKey(@RequestBody String requestBody) {
         try {
-            // order logic
 
+            if(key.isEmpty()){
+                answerModel.setMessage("x-api-key is missing");
+                return new ResponseEntity<AnswerModel>(answerModel, HttpStatus.FORBIDDEN);
+            }
 
+            JsonNode requestBodyRoot = objectMapper.readTree(requestBody);
+
+            if(requestBody == null || requestBody.trim().isEmpty() || requestBodyRoot.path("brothId").asText().isEmpty() || requestBodyRoot.path("proteinId").asText().isEmpty()) {
+                answerModel.setMessage("both brothId and proteinId are required");
+                return new ResponseEntity<>(answerModel, HttpStatus.BAD_REQUEST);
+            }
+            
             return apiService.postWithApiKey(key, generateidUrl, requestBody);
-
 
         } catch (Exception e) {
             
-            answerModel.setMessage(e.getMessage());
-            return new ResponseEntity<AnswerModel>(answerModel, HttpStatus.BAD_REQUEST);
+            if(key.isEmpty()){
+                answerModel.setMessage("x-api-key is missing");
+                return new ResponseEntity<AnswerModel>(answerModel, HttpStatus.FORBIDDEN);
+            }else{
+                answerModel.setMessage("could not place order");
+                return new ResponseEntity<>(answerModel, HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+
+           
         }
     }
-
+    
     @GetMapping("/broths")
     public ResponseEntity<?> getRequestBrothsWithApiKey() {
+
+        if(key.isEmpty()){
+            answerModel.setMessage("x-api-key is missing");
+            return new ResponseEntity<AnswerModel>(answerModel, HttpStatus.FORBIDDEN);
+        }
+
         try {
+
             return apiService.getBrothsWithApiKey(key, listBrothsUrl);
+
         } catch (Exception e) {
-            answerModel.setMessage(e.getMessage());
-            return new ResponseEntity<AnswerModel>(answerModel, HttpStatus.BAD_REQUEST);
+            
+            answerModel.setMessage("x-api-key is missing");
+            return new ResponseEntity<AnswerModel>(answerModel, HttpStatus.FORBIDDEN);
 
         }
     }
 
     @GetMapping("/proteins")
     public ResponseEntity<?> getRequestProteinsWithApiKey() {
+        
+        if(key.isEmpty()){
+            answerModel.setMessage("x-api-key is missing");
+            return new ResponseEntity<AnswerModel>(answerModel, HttpStatus.FORBIDDEN);
+        }
+
         try {
+
             return apiService.getProteinsWithApiKey(key, listProteinsUrl);
+
         } catch (Exception e) {
-            answerModel.setMessage(e.getMessage());
-            return new ResponseEntity<AnswerModel>(answerModel, HttpStatus.BAD_REQUEST);
+            answerModel.setMessage("x-api-key is missing");
+            return new ResponseEntity<AnswerModel>(answerModel, HttpStatus.FORBIDDEN);
         }
     }
 

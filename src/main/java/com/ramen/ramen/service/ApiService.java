@@ -17,6 +17,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.ramen.ramen.model.AnswerModel;
 import com.ramen.ramen.model.BrothModel;
 import com.ramen.ramen.model.OrderModel;
 import com.ramen.ramen.model.ProteinModel;
@@ -30,6 +31,8 @@ public class ApiService {
 
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
+
+    private AnswerModel answerModel;
     
     public ApiService() {
         this.restTemplate = new RestTemplate();
@@ -47,32 +50,50 @@ public class ApiService {
         headers.set("Content-Type", "application/json");
 
         HttpEntity<String> entity = new HttpEntity<>(requestBody, headers);
-
-        ResponseEntity<String> response = restTemplate.exchange(customUrl, HttpMethod.POST, entity, String.class);
-
         HttpEntity<String> bentity = new HttpEntity<>(headers);
-
-        ResponseEntity<String> Getresponse = restTemplate.exchange(listBrothsUrl, HttpMethod.GET, bentity, String.class);
-
         HttpEntity<String> pentity = new HttpEntity<>(headers);
 
-        ResponseEntity<String> Getresponsep = restTemplate.exchange(listProteinsUrl, HttpMethod.GET, pentity, String.class);
+        ResponseEntity<String> OrderResponse = restTemplate.exchange(customUrl, HttpMethod.POST, entity, String.class);
+
+        if (!OrderResponse.getStatusCode().is2xxSuccessful()) {
+            
+            answerModel.setMessage("could not place order");
+            return new ResponseEntity<>(answerModel, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        ResponseEntity<String> BrothResponse = restTemplate.exchange(listBrothsUrl, HttpMethod.GET, bentity, String.class);
+
+        if (!BrothResponse.getStatusCode().is2xxSuccessful()) {
+
+            answerModel.setMessage("could not place order");
+            return new ResponseEntity<>(answerModel, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        ResponseEntity<String> ProteinResponse = restTemplate.exchange(listProteinsUrl, HttpMethod.GET, pentity, String.class);
+
+        if (!ProteinResponse.getStatusCode().is2xxSuccessful()) {
+
+            answerModel.setMessage("could not place order");
+            return new ResponseEntity<>(answerModel, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
 
         List<BrothModel> broths = new ArrayList<>();
         List<ProteinModel> proteins = new ArrayList<>();
 
         OrderModel orderModel = new OrderModel();
+
         JsonNode root;
         JsonNode bRoot;
         JsonNode pRoot;
         JsonNode orderRoot;
+
         try {
-            root = objectMapper.readTree(response.getBody());
-            bRoot = objectMapper.readTree(Getresponse.getBody());
-            pRoot = objectMapper.readTree(Getresponsep.getBody());
+
+            root = objectMapper.readTree(OrderResponse.getBody());
+            bRoot = objectMapper.readTree(BrothResponse.getBody());
+            pRoot = objectMapper.readTree(ProteinResponse.getBody());
             orderRoot = objectMapper.readTree(entity.getBody());
 
-            // JSON is an array of broths
             if (bRoot.isArray()) {
                 ArrayNode arrayNode = (ArrayNode) bRoot;
                 for (JsonNode node : arrayNode) {
@@ -89,9 +110,6 @@ public class ApiService {
                 }
             }
 
-            // String bId = orderRoot.path("brothId").asText();
-            // String pId = orderRoot.path("proteinId").asText();
-
             int bindexId = Integer.parseInt(orderRoot.path("brothId").asText());
             int pindexId = Integer.parseInt(orderRoot.path("proteinId").asText());
 
@@ -102,18 +120,21 @@ public class ApiService {
             orderModel.setDescription(bName+" and "+pName);
             orderModel.setImage(imageRamenUrl+pName+".png");
            
+            if (OrderResponse.getStatusCode().is2xxSuccessful()) {
+                return new ResponseEntity<OrderModel>(orderModel, HttpStatus.OK);
+            } else {
+                answerModel.setMessage("could not place order");
+                return new ResponseEntity<>(answerModel, HttpStatus.INTERNAL_SERVER_ERROR);
+            }
 
         } catch (JsonMappingException e) {
-            e.printStackTrace();
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
+            answerModel.setMessage("Invalid JSON structure");
+            return new ResponseEntity<>(answerModel, HttpStatus.BAD_REQUEST);
+        } catch (IOException e) {
+            answerModel.setMessage("could not place order");
+            return new ResponseEntity<>(answerModel, HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
-        if (response.getStatusCode().is2xxSuccessful()) {
-            return new ResponseEntity<OrderModel>(orderModel, HttpStatus.OK);
-        } else {
-            throw new RuntimeException("Request failed with status code: " + response.getStatusCode());
-        }
     }
 
     public ResponseEntity<?> getBrothsWithApiKey(String apiKey, String customUrl) throws IOException {
@@ -127,6 +148,7 @@ public class ApiService {
         ResponseEntity<String> response = restTemplate.exchange(customUrl, HttpMethod.GET, entity, String.class);
  
         List<BrothModel> broths = new ArrayList<>();
+
         try {
 
             JsonNode root = objectMapper.readTree(response.getBody());
@@ -150,7 +172,8 @@ public class ApiService {
             }
 
         } catch (JsonMappingException e) {
-            e.printStackTrace();
+            answerModel.setMessage("Invalid JSON structure");
+            return new ResponseEntity<>(answerModel, HttpStatus.BAD_REQUEST);
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
@@ -158,7 +181,8 @@ public class ApiService {
         if (response.getStatusCode().is2xxSuccessful()) {
             return new ResponseEntity<Iterable<BrothModel>>(broths, HttpStatus.CREATED);
         } else {
-            throw new RuntimeException("Request failed with status code: " + response.getStatusCode());
+            answerModel.setMessage("could not place order");
+            return new ResponseEntity<>(answerModel, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -173,6 +197,7 @@ public class ApiService {
         ResponseEntity<String> response = restTemplate.exchange(customUrl, HttpMethod.GET, entity, String.class);
 
         List<ProteinModel> proteins = new ArrayList<>();
+
         try {
 
             JsonNode root = objectMapper.readTree(response.getBody());
@@ -190,13 +215,17 @@ public class ApiService {
                     proteinModel.setPrice(node.path("price").asText());
                     proteins.add(proteinModel);
                 }
+                
                 return new ResponseEntity<Iterable<ProteinModel>>(proteins, HttpStatus.OK);
+
             } else {
-                return new ResponseEntity<>("Expected an array in the JSON response", HttpStatus.BAD_REQUEST);
+                answerModel.setMessage("Invalid JSON structure");
+                return new ResponseEntity<>(answerModel, HttpStatus.BAD_REQUEST);
             }
 
         } catch (JsonMappingException e) {
-            e.printStackTrace();
+            answerModel.setMessage("Invalid JSON structure");
+            return new ResponseEntity<>(answerModel, HttpStatus.BAD_REQUEST);
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
@@ -204,7 +233,8 @@ public class ApiService {
         if (response.getStatusCode().is2xxSuccessful()) {
             return new ResponseEntity<Iterable<ProteinModel>>(proteins, HttpStatus.CREATED);
         } else {
-            throw new RuntimeException("Request failed with status code: " + response.getStatusCode());
+            answerModel.setMessage("could not place order");
+            return new ResponseEntity<>(answerModel, HttpStatus.INTERNAL_SERVER_ERROR);
         }
            
    }
