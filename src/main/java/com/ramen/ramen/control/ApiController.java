@@ -1,7 +1,6 @@
 package com.ramen.ramen.control;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -27,6 +26,7 @@ public class ApiController {
     @Autowired
     private AnswerModel answerModel;
 
+    // i could put these in application.properties but i decided to leave hardcoded like this
     private final String generateidUrl = "https://api.tech.redventures.com.br/orders/generate-id";
     private final String listBrothsUrl = "https://api.tech.redventures.com.br/broths";
     private final String listProteinsUrl = "https://api.tech.redventures.com.br/proteins";
