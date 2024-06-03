@@ -6,7 +6,6 @@ import lombok.Setter;
 @Getter
 @Setter
 public class ProteinModel {
-    
     private String id;
     private String imageInactive;
     private String imageActive;

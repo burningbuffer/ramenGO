@@ -5,9 +5,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -16,6 +18,7 @@ import com.ramen.ramen.model.AnswerModel;
 import com.ramen.ramen.service.ApiService;
 
 @Controller
+@CrossOrigin(origins = "*")
 public class ApiController {
 
     @Autowired
@@ -23,9 +26,6 @@ public class ApiController {
 
     @Autowired
     private AnswerModel answerModel;
-
-    @Value("${x-api-key}")
-    private String key;
 
     private final String generateidUrl = "https://api.tech.redventures.com.br/orders/generate-id";
     private final String listBrothsUrl = "https://api.tech.redventures.com.br/broths";
@@ -35,7 +35,7 @@ public class ApiController {
 
     @PostMapping("/orders")
     @ResponseBody
-    public ResponseEntity<?> sendRequestWithApiKey(@RequestBody String requestBody) {
+    public ResponseEntity<?> sendRequestWithApiKey(@RequestBody String requestBody, @RequestHeader("x-api-key") String key) {
         try {
 
             if(key.isEmpty()){
@@ -67,7 +67,7 @@ public class ApiController {
     }
     
     @GetMapping("/broths")
-    public ResponseEntity<?> getRequestBrothsWithApiKey() {
+    public ResponseEntity<?> getRequestBrothsWithApiKey(@RequestHeader("x-api-key") String key) {
 
         if(key.isEmpty()){
             answerModel.setMessage("x-api-key is missing");
@@ -87,7 +87,7 @@ public class ApiController {
     }
 
     @GetMapping("/proteins")
-    public ResponseEntity<?> getRequestProteinsWithApiKey() {
+    public ResponseEntity<?> getRequestProteinsWithApiKey(@RequestHeader("x-api-key") String key) {
         
         if(key.isEmpty()){
             answerModel.setMessage("x-api-key is missing");
