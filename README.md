@@ -43,19 +43,19 @@ You can use tools like curl or Postman to test the endpoints, right below are so
 - **List available broths:**
 
   ```
-  curl -X GET -H "Content-Type: application/json"  http://localhost:8080/proteins
+  curl -X GET -H "Content-Type: application/json" -H "x-api-key: YOUR_API_KEY" http://localhost:8080/proteins
   ```
 
 - **List available proteins:**
 
   ```
-  curl -X GET -H "Content-Type: application/json"  http://localhost:8080/broths
+  curl -X GET -H "Content-Type: application/json" -H "x-api-key: YOUR_API_KEY" http://localhost:8080/broths
   ```
 
 - **Place an order:**
 
   ```
-  curl -X POST -H "Content-Type: application/json" -d "{\"brothId\": \"1\", \"proteinId\": \"1\"}" http://localhost:8080/orders
+  curl -X POST -H "Content-Type: application/json" -H "x-api-key: YOUR_API_KEY" -d "{\"brothId\": \"1\", \"proteinId\": \"1\"}" http://localhost:8080/orders
   ```
 
 
