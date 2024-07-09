@@ -23,7 +23,7 @@ import com.ramen.ramen.model.OrderModel;
 import com.ramen.ramen.model.ProteinModel;
 
 @Service
-public class ApiService {
+public class ApiService implements InterfaceApiService{
 
     private final String listBrothsUrl = "https://api.tech.redventures.com.br/broths";
     private final String listProteinsUrl = "https://api.tech.redventures.com.br/proteins";

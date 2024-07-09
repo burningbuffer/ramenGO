@@ -35,7 +35,7 @@ public class ApiController {
 
     @PostMapping("/orders")
     @ResponseBody
-    public ResponseEntity<?> sendRequestWithApiKey(@RequestBody String requestBody, @RequestHeader("x-api-key") String key) {
+    public ResponseEntity<?> sendOrderWithApiKey(@RequestBody String requestBody, @RequestHeader("x-api-key") String key) {
         try {
 
             if(key.isEmpty()){
@@ -67,7 +67,7 @@ public class ApiController {
     }
     
     @GetMapping("/broths")
-    public ResponseEntity<?> getRequestBrothsWithApiKey(@RequestHeader("x-api-key") String key) {
+    public ResponseEntity<?> getBrothsListWithApiKey(@RequestHeader("x-api-key") String key) {
 
         if(key.isEmpty()){
             answerModel.setMessage("x-api-key is missing");
@@ -87,7 +87,7 @@ public class ApiController {
     }
 
     @GetMapping("/proteins")
-    public ResponseEntity<?> getRequestProteinsWithApiKey(@RequestHeader("x-api-key") String key) {
+    public ResponseEntity<?> getProteinsListWithApiKey(@RequestHeader("x-api-key") String key) {
         
         if(key.isEmpty()){
             answerModel.setMessage("x-api-key is missing");
